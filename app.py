@@ -1,55 +1,67 @@
 import streamlit as st
 
-st.title("🍔 Restaurant Ordering App")
+st.set_page_config(page_title="Restaurant AI", layout="centered")
 
+st.title("🍔 Smart Restaurant Ordering System")
+
+# MENU
 menu = {
-    "burger": 10,
-    "pizza": 15,
-    "fries": 5,
-    "cola": 3
+    "🍔 Burgers": {
+        "burger": 10,
+        "cheeseburger": 12
+    },
+    "🍟 Sides": {
+        "fries": 5,
+        "nuggets": 8
+    },
+    "🥤 Drinks": {
+        "cola": 3,
+        "water": 1
+    }
 }
 
-st.write("### Menu")
-for item, price in menu.items():
-    st.write(f"{item} - ${price}")
+# CART
+if "cart" not in st.session_state:
+    st.session_state.cart = {}
 
-user_input = st.text_input("Type your order (example: 2 burgers and 1 cola)")
+st.write("## 🍽️ Menu")
 
-def parse_order(text):
-    items = ["burger", "pizza", "fries", "cola"]
-    order = {}
+# SHOW MENU WITH BUTTONS
+for category, items in menu.items():
+    st.subheader(category)
 
-    words = text.lower().split()
+    for item, price in items.items():
+        col1, col2 = st.columns([3, 1])
 
-    for i, word in enumerate(words):
-        if word.isdigit():
-            qty = int(word)
-            if i + 1 < len(words):
-                item = words[i + 1].rstrip("s")
-                if item in items:
-                    order[item] = order.get(item, 0) + qty
+        with col1:
+            st.write(f"{item} - ${price}")
 
-    for item in items:
-        if item in text.lower():
-            if item not in order:
-                order[item] = 1
+        with col2:
+            if st.button(f"Add {item}", key=item):
+                st.session_state.cart[item] = st.session_state.cart.get(item, 0) + 1
 
-    return order
+# SHOW CART
+st.write("---")
+st.write("## 🛒 Your Order")
 
-if user_input:
-    order = parse_order(user_input)
+total = 0
 
-    if order:
-        st.write("### Your Order")
-        total = 0
+if st.session_state.cart:
+    for item, qty in st.session_state.cart.items():
+        price = None
 
-        for item, qty in order.items():
-            st.write(f"{item} x {qty}")
-            total += menu[item] * qty
+        # find price in menu
+        for category in menu.values():
+            if item in category:
+                price = category[item]
 
-        st.write(f"## Total: ${total}")
+        st.write(f"{item} x {qty} = ${price * qty}")
+        total += price * qty
 
-        if st.button("Confirm Order"):
-            st.success("Order placed successfully 🎉")
-    else:
-        st.error("Could not understand order")
+    st.write(f"### 💰 Total: ${total}")
+
+    if st.button("✅ Checkout"):
+        st.success("🎉 Order placed successfully!")
+
+else:
+    st.write("Your cart is empty")
